@@ -24,6 +24,7 @@ def splitData(data):
     X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.5, shuffle=True)
     return X_train, X_test, y_train, y_test
 
+# Find the best tree based on F1 score
 def findBestTree(X_train, y_train, X_test, y_test):
     bestTree = None
     bestF1 = 0
@@ -37,17 +38,23 @@ def findBestTree(X_train, y_train, X_test, y_test):
             bestTree = tree
     return bestTree
 
-#Plot tree
+# Plot tree
 def plotTree(tree, feature_names):
     plt.figure(figsize=(20, 20))
     plot_tree(tree, filled=True, feature_names=feature_names, class_names=['Not probable', 'Highly probable'], impurity=False, proportion=False, rounded=True, precision=2)
-    plt.savefig('tree.svg', format='svg')
+    plt.savefig('./images/tree.svg', format='svg')
 
+# Main function
 if __name__ == '__main__':
+    # Use pandas to get data from CSV file and process null inputs
     data = getData()
     dropMissingValues(data)
     fillMissingValues(data)
+
+    # Split data into training and testing sets
     X_train, y_train, X_test, y_test = splitData(data)
+
+    # Find the best tree based on F1 score
     bestTree = findBestTree(X_train, y_train, X_test, y_test)
     print(bestTree)
     y_pred = bestTree.predict(X_test)
