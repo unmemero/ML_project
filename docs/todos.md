@@ -19,4 +19,4 @@ MOdify this file to mark down done tasks.
   - [ ] Connect fields to numpy to predict.
   - [ ] Create prompt to ask user if they want to generate encrypted pdf doc.
   - [ ] Create pdf using pandoc if yes
-- [ ] Try and export application as lightweight GUI app using pyinstaller (will add to makefile).
+- [ ] Try and export application as lightweight GUI app using pyinstaller (will add to makefile) and make small executable with upx (will also add make rule).

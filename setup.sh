@@ -10,7 +10,7 @@ fi
 
 # Install dependencies
 # Check if git is installed
-comms = ("git" "python3" "pip3")
+comms = ("git" "python3" "pip3" "upx")
 
 for comm in $comms
 do
