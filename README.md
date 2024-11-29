@@ -26,7 +26,7 @@
 - [ ] `ML_Project.pptx`: Project proposal powerpoint, might edit along the way
 - [ ] `images/` folder to store all image assets. To provide best quality, **ALL IMAGES GENERATED MUST BE SVG**.
 - [ ] `docs/`: folder containing general info [Table.md](./docs/Table.md) provides the dataset in an easy to visualize markdown table format. [todos](./docs/todos.md) is a simple list of Tasks to do in the project.
-
+- [ ] **Very important:** Please read [Report](./docs/[F24-ML]Project%20Report%20-%20Rafael%20Garcia%20and%20Fernando%20Muñoz.md) and modify as required.
 
 [Back to index](#ml_project)
 

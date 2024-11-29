@@ -1,5 +1,5 @@
 run: 
-	python3 projext.py
+	python3 project.py
 pull:
 	git pull origin main --rebase
 push:
