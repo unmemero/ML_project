@@ -8,3 +8,5 @@ push:
 	git commit -m "$message" ;\
 	git pull origin main --rebase; \
 	git push origin main
+pdf:
+	pandoc ./docs/\[F24-ML\]Project\ Report\ -\ Rafael\ Garcia\ and\ Fernando\ Muñoz.md -o \[F24-ML\]Project\ Report\ -\ Rafael\ Garcia\ and\ Fernando\ Muñoz.pdf
