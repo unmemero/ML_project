@@ -1,5 +1,7 @@
 run: 
 	python3 project.py
+test:
+	python3 test.py
 pull:
 	git pull origin main --rebase
 push:
