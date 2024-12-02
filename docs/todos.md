@@ -1,18 +1,20 @@
 # TODOS
 
-MOdify this file to mark down done tasks.
+Mddify this file in mark down done tasks and add findings and new tasks.
 
 - [x] Process data
 - [x] Find best decission tree.
+- [x] Perfect metrics acchieved (possible overfitting)
+- [x] Do reaserch on why this may be. Determined it's due to balanced set and common diagnosing features.
+  - [ ] Find sources to back up findings.
+  - [ ] **Work on report**.
 - [x] Plot tree. Test different formats.
   - [x] PNG
   - [x] JPEG
   - [x] JPG
   - [x] SVG (Best result)
-- [ ] Test using KNN with best tree features.
-- [ ] Test using KMeans with best tree features
-- [ ] Generate and evaluate visual aids to determine which one is best for purpose of project.
-- [ ] Build GUI in pyqt5.
+- [x] Generate and evaluate visual aids to determine which one is best for purpose of project.
+- [ ] Build GUI with tkinter.
   - [ ] Create framework for application, giving space for form, and visual aids.
   - [ ] Create data input in GUI to include patient name and fields, and submission button.
   - [ ] Add generated visual aids by model.
