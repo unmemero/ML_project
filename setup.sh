@@ -10,7 +10,7 @@ fi
 
 # Install dependencies
 # Check if git is installed
-comms = ("git" "python3" "pip3" "upx")
+comms = ("git" "python3" "pip3" "upx" "python-tk")
 
 for comm in $comms
 do
@@ -23,7 +23,7 @@ do
 done
 
 # Install pip libs
-requirements=("scikit-learn" "pandas" "numpy" "matplotlib" "pyqt5" "pyqt5-tools" "pyinstaller" "jupyter" "seaborn" "pandoc")
+requirements=("scikit-learn" "pandas" "numpy" "matplotlib" "tkcalendar"  "pyinstaller" "seaborn" "pandoc" "cryptography" "fpdf")
 
 for req in $requirements
 do
