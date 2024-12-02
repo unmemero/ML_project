@@ -6,10 +6,16 @@ from tabs.GetPatientInfoTab import GetPatientInfoTab
 from tabs.ViewGraphTab import ViewGraphTab
 from model.Model import Model
 
+"""
+- Main GUI application integrating all the tabs and the model.
+- The model is instantiated and trained here.
+"""
+
+
 class HeartDiseaseAnalyzerApp:
     def __init__(self, root, model):
         self.root = root
-        self.model = model  # Store the model instance
+        self.model = model 
         self.root.title("Heart Disease Analyzer")
         self.root.geometry("768x1024")
         self.root.resizable(False, False)

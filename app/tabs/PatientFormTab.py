@@ -1,9 +1,11 @@
+# PatientFormTab.py
 import tkinter as tk
 from tkinter import ttk, messagebox as mb
 from tkcalendar import DateEntry
 import pandas as pd
 import json
 import os
+from cryptography.fernet import Fernet
 
 class PatientFormTab:
     """Encapsulates the patient form."""
@@ -13,6 +15,20 @@ class PatientFormTab:
         self.model = model  # Store the model instance
         self.prediction_result = None  # To store the prediction result
         self.create_widgets()
+
+        # Load encryption key
+        self.key = self.load_key()
+        self.cipher_suite = Fernet(self.key)
+
+    def load_key(self):
+        """Load the encryption key from 'secret.key'."""
+        try:
+            with open('secret.key', 'rb') as key_file:
+                key = key_file.read()
+            return key
+        except FileNotFoundError:
+            mb.showerror("Error", "Encryption key file 'secret.key' not found.")
+            raise
 
     def create_widgets(self):
         # Frames for grouping
@@ -208,7 +224,7 @@ class PatientFormTab:
         return input_df
 
     def save_report(self):
-        """Save the data and prediction result into 'hdisrep.json' with the key as FirstName_LastName_DOB."""
+        """Save the data and prediction result into 'hdisrep.json' with encryption."""
         if self.prediction_result is None:
             mb.showwarning("Warning", "Please submit the form to get a prediction before saving the report.")
             return
@@ -235,23 +251,41 @@ class PatientFormTab:
 
         key = f"{first_name}_{last_name}_{date_of_birth}"
 
-        # Load existing data if the file exists
+        # Load existing data if the file exists, decrypting it first
+        reports = {}
         if os.path.exists("hdisrep.json"):
             try:
-                with open("hdisrep.json", "r") as f:
-                    reports = json.load(f)
-            except json.JSONDecodeError:
-                reports = {}
+                with open("hdisrep.json", "rb") as f:
+                    encrypted_data = f.read()
+                    if encrypted_data:
+                        decrypted_data = self.cipher_suite.decrypt(encrypted_data)
+                        reports = json.loads(decrypted_data.decode('utf-8'))
+                    else:
+                        # File is empty
+                        reports = {}
+            except Exception as e:
+                # Handle decryption error
+                response = mb.askyesno("Error", f"An error occurred while decrypting 'hdisrep.json': {e}\n\n"
+                                                "Do you want to overwrite the file with new data?")
+                if response:
+                    # Overwrite the file
+                    reports = {}
+                else:
+                    # Do not overwrite, exit the method
+                    return
         else:
+            # File does not exist; initialize empty reports dictionary
             reports = {}
 
         # Add or update the patient's data
         reports[key] = data
 
-        # Save to hdisrep.json
+        # Save and encrypt the updated data
         try:
-            with open("hdisrep.json", "w") as f:
-                json.dump(reports, f, indent=4)
-            mb.showinfo("Success", f"Report saved successfully under key '{key}' in 'hdisrep.json'.")
+            json_data = json.dumps(reports, indent=4)
+            encrypted_data = self.cipher_suite.encrypt(json_data.encode('utf-8'))
+            with open("hdisrep.json", "wb") as f:
+                f.write(encrypted_data)
+            mb.showinfo("Success", f"Report saved and encrypted successfully under key '{key}' in 'hdisrep.json'.")
         except Exception as e:
-            mb.showerror("Error", f"An error occurred while saving the report: {e}")
+            mb.showerror("Error", f"An error occurred while saving and encrypting the report: {e}")
