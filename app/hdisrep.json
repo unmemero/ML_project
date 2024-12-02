@@ -1,0 +1,40 @@
+{
+    "John_Deacon_1954-12-04": {
+        "First Name": "John",
+        "Last Name": "Deacon",
+        "Date of Birth": "1954-12-04",
+        "Age": "70",
+        "Sex": "Male",
+        "Chest Pain Type (0-3)": "2",
+        "Resting Blood Pressure (mmHg)": "189",
+        "Serum Cholesterol (mg/dL)": "250",
+        "Fasting Blood Sugar > 120 mg/dL": "No",
+        "Resting ECG": "ST-T Wave Abnormality",
+        "Max Heart Rate (BPM)": "95",
+        "Exercise Induced Angina": "Yes",
+        "ST Depression": "1.7",
+        "Slope of Peak Exercise ST Segment": "Flat",
+        "Number of Major Vessels": "2",
+        "Thalassemia": "Fixed Defect",
+        "Prediction Result": "The patient does NOT have heart disease."
+    },
+    "Pope_Frank_1954-12-04": {
+        "First Name": "Pope",
+        "Last Name": "Frank",
+        "Date of Birth": "1954-12-04",
+        "Age": "85",
+        "Sex": "Male",
+        "Chest Pain Type (0-3)": "3",
+        "Resting Blood Pressure (mmHg)": "125",
+        "Serum Cholesterol (mg/dL)": "190",
+        "Fasting Blood Sugar > 120 mg/dL": "Yes",
+        "Resting ECG": "Normal",
+        "Max Heart Rate (BPM)": "125",
+        "Exercise Induced Angina": "No",
+        "ST Depression": "2.3",
+        "Slope of Peak Exercise ST Segment": "Upsloping",
+        "Number of Major Vessels": "1",
+        "Thalassemia": "Reversible Defect",
+        "Prediction Result": "The patient does NOT have heart disease."
+    }
+}
