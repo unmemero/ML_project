@@ -1,4 +1,3 @@
-# tabs/PatientFormTab.py
 import tkinter as tk
 from tkinter import ttk, messagebox as mb
 from tkcalendar import DateEntry

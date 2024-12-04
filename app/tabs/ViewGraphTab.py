@@ -1,11 +1,12 @@
+
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import os
 import sys
 import subprocess
 
 """
-- Shows image of graph traversal in image shower
+- Shows image of graph traversal in image viewer.
 """
 class ViewGraphTab:
 
@@ -14,9 +15,17 @@ class ViewGraphTab:
         self.frame = ttk.Frame(parent)
         self.create_widgets()
 
+    # Function to get resource path
+    def resource_path(self, relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+
     # Widget maker for button
     def create_widgets(self):
-        """Create widgets for the tab."""
         ttk.Label(
             self.frame,
             text="Graph",
@@ -24,7 +33,7 @@ class ViewGraphTab:
             padding=10
         ).pack()
 
-        # aDD BUTTON STYLE
+        # Add BUTTON STYLE
         style = ttk.Style()
         style.theme_use('clam') 
 
@@ -45,25 +54,24 @@ class ViewGraphTab:
         open_button.pack(pady=20)
 
     def open_image(self):
-        """Open the SVG image using the default image viewer."""
-        svg_path = "images/tree.svg"
-        absolute_path = os.path.abspath(svg_path)
+        svg_relative_path = os.path.join("images", "tree.svg")
+        svg_path = self.resource_path(svg_relative_path)
 
-        if not os.path.exists(absolute_path):
-            tk.messagebox.showerror("Error", f"The file '{svg_path}' does not exist.")
+        if not os.path.exists(svg_path):
+            messagebox.showerror("Error", f"The file '{svg_relative_path}' does not exist.")
             return
 
         try:
             if sys.platform.startswith('darwin'):
                 # macOS
-                subprocess.call(('open', absolute_path))
+                subprocess.call(('open', svg_path))
             elif os.name == 'nt':
                 # Windows
-                os.startfile(absolute_path)
+                os.startfile(svg_path)
             elif os.name == 'posix':
                 # Linux and other Unix-like systems
-                subprocess.call(('xdg-open', absolute_path))
+                subprocess.call(('xdg-open', svg_path))
             else:
-                tk.messagebox.showerror("Error", "Unsupported operating system.")
+                messagebox.showerror("Error", "Unsupported operating system.")
         except Exception as e:
-            tk.messagebox.showerror("Error", f"Could not open the image: {e}")
+            messagebox.showerror("Error", f"Could not open the image: {e}")
