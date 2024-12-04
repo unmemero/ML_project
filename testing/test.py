@@ -1,14 +1,11 @@
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score, confusion_matrix, accuracy_score, recall_score, precision_score
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from sklearn.linear_model import LogisticRegression
 
 # Load data from CSV file
 def getData():

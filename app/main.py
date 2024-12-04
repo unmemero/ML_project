@@ -13,6 +13,8 @@ from model.Model import Model
 
 
 class HeartDiseaseAnalyzerApp:
+
+    # Main App Constructor
     def __init__(self, root, model):
         self.root = root
         self.model = model 
@@ -32,13 +34,12 @@ class HeartDiseaseAnalyzerApp:
             pady=10,
         ).pack(fill="x")
 
-        # Add Notebook (Tabs)
+        # Add Tabs
         self.tab_control = ttk.Notebook(root)
         self.tab_control.pack(expand=1, fill="both", padx=20, pady=10)
-
-        # Add tabs
         self.add_tabs()
 
+    # Center window on screen
     def center_window(self):
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -46,8 +47,8 @@ class HeartDiseaseAnalyzerApp:
         window_y = (screen_height // 2) - (1024 // 2)
         self.root.geometry(f"+{window_x}+{window_y}")
 
+    # Init the tabs
     def add_tabs(self):
-        # Initialize and add tabs
         patient_form_tab = PatientFormTab(self.tab_control, self.model)
         self.tab_control.add(patient_form_tab.frame, text="Patient Form")
 
@@ -57,8 +58,9 @@ class HeartDiseaseAnalyzerApp:
         view_graph_tab = ViewGraphTab(self.tab_control)
         self.tab_control.add(view_graph_tab.frame, text="View Graph")
 
+# Main function
 if __name__ == "__main__":
     root = tk.Tk()
-    model = Model()  # Instantiate and train the model
+    model = Model()
     app = HeartDiseaseAnalyzerApp(root, model)
     root.mainloop()

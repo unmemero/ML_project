@@ -4,13 +4,17 @@ import os
 import sys
 import subprocess
 
+"""
+- Shows image of graph traversal in image shower
+"""
 class ViewGraphTab:
-    """Encapsulates the View Graph functionality."""
 
+    # Constructor
     def __init__(self, parent):
         self.frame = ttk.Frame(parent)
         self.create_widgets()
 
+    # Widget maker for button
     def create_widgets(self):
         """Create widgets for the tab."""
         ttk.Label(
@@ -20,29 +24,29 @@ class ViewGraphTab:
             padding=10
         ).pack()
 
-        # Create a style for the button
+        # aDD BUTTON STYLE
         style = ttk.Style()
-        style.theme_use('clam')  # Use 'clam' theme which allows for more customization
+        style.theme_use('clam') 
 
-        # Configure the style for the button
+        # Configure BUTTON
         style.configure('Custom.TButton',
-                        background='#4CAF50',  # Button background color
-                        foreground='white',    # Button text color
+                        background='#4CAF50',
+                        foreground='white',  
                         font=('Arial', 12, 'bold'))
 
-        # Apply the style to the button
+        # Apply STYLE
         open_button = ttk.Button(
             self.frame,
             text="Open Graph",
             command=self.open_image,
             padding=10,
-            style='Custom.TButton'  # Apply the custom style
+            style='Custom.TButton'
         )
         open_button.pack(pady=20)
 
     def open_image(self):
         """Open the SVG image using the default image viewer."""
-        svg_path = "images/tree.svg"  # Update this path to your SVG file
+        svg_path = "images/tree.svg"
         absolute_path = os.path.abspath(svg_path)
 
         if not os.path.exists(absolute_path):

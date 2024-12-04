@@ -1,4 +1,3 @@
-# PatientFormTab.py
 import tkinter as tk
 from tkinter import ttk, messagebox as mb
 from tkcalendar import DateEntry
@@ -7,21 +6,23 @@ import json
 import os
 from cryptography.fernet import Fernet
 
+"""
+- Tab containing a form to collect patient information and make predictions.
+- Allows saving the patient data and prediction result to an encrypted file.
+- Uses the model to make predictions based on the input data.
+"""
 class PatientFormTab:
-    """Encapsulates the patient form."""
-
+    # Form Constructor
     def __init__(self, parent, model):
         self.frame = ttk.Frame(parent)
-        self.model = model  # Store the model instance
-        self.prediction_result = None  # To store the prediction result
+        self.model = model 
+        self.prediction_result = None
         self.create_widgets()
-
-        # Load encryption key
         self.key = self.load_key()
         self.cipher_suite = Fernet(self.key)
 
+    # Get key to decryot data
     def load_key(self):
-        """Load the encryption key from 'secret.key'."""
         try:
             with open('secret.key', 'rb') as key_file:
                 key = key_file.read()
@@ -29,9 +30,9 @@ class PatientFormTab:
         except FileNotFoundError:
             mb.showerror("Error", "Encryption key file 'secret.key' not found.")
             raise
-
+    
+    # Create widgets for the form
     def create_widgets(self):
-        # Frames for grouping
         patient_frame = ttk.LabelFrame(self.frame, text="Patient Information", padding=(20, 10))
         patient_frame.pack(fill="x", padx=20, pady=10)
 
@@ -61,37 +62,38 @@ class PatientFormTab:
         # Dictionary to store widget references
         self.widgets = {}
 
-        # Determine the width based on the longest label
+        # Determine the width of longest label
         max_label_length = max(len(label) for label, _ in self.fields)
-        field_width = max_label_length + 5  # Add padding for the longest string
+        field_width = max_label_length + 5  
 
         # Create patient information fields
         for i, (label, value) in enumerate(self.fields):
             if label in ["First Name:", "Last Name:", "Date of Birth:", "Age:"]:
                 parent_frame = patient_frame
-                row_index = i  # Row index in patient_frame
+                row_index = i  
             else:
                 parent_frame = medical_frame
-                row_index = i - 4  # Adjust row index for medical_frame
-
+                row_index = i - 4
+            
+            # Add label and widget to fram
             ttk.Label(parent_frame, text=label).grid(row=row_index, column=0, sticky="w", pady=5)
-            if isinstance(value, list):  # Dropdown (Combobox)
+            if isinstance(value, list): 
                 widget = ttk.Combobox(
                     parent_frame,
                     values=value,
                     width=field_width,
                     state="readonly"
                 )
-            elif value == "date":  # Use DateEntry for date fields
+            elif value == "date": 
                 widget = DateEntry(
                     parent_frame,
                     width=field_width - 2,
                     background='darkblue',
                     foreground='white',
                     borderwidth=2,
-                    date_pattern='y-mm-dd'  # Set date format
+                    date_pattern='y-mm-dd' 
                 )
-            else:  # Entry widget
+            else: 
                 widget = ttk.Entry(parent_frame, width=field_width)
             widget.grid(row=row_index, column=1, pady=5)
             self.widgets[label] = widget
@@ -124,6 +126,7 @@ class PatientFormTab:
             pady=5,
         ).pack(side="left", padx=10)
 
+    # Function to get prediction
     def submit_info(self):
         # Check if all fields are filled
         for label, widget in self.widgets.items():
@@ -134,35 +137,30 @@ class PatientFormTab:
                 mb.showerror("Error", f"Please fill in the {label.lower()}")
                 return
 
-        # Process the collected data
+        # Process data
         data = {label: widget.get() for label, widget in self.widgets.items()}
-        print("Collected Data:", data)  # Debugging purposes
+        print("Collected Data:", data)  
 
-        # Preprocess the data to match the model's expected input
+        # Preprocess data to match model data
         try:
             input_data = self.preprocess_data(data)
             prediction = self.model.predict(input_data)
             result = prediction[0]
 
-            # Store the prediction result
+            # Store prediction
             self.prediction_result = result
 
-            # Display the prediction result
+            # Display result
             if result == 0:
-                mb.showinfo("Result", "The model predicts that the patient does NOT have heart disease.")
+                mb.showinfo("Result", "NO signs of heart disease detected.")
             else:
-                mb.showinfo("Result", "The model predicts that the patient HAS heart disease.")
+                mb.showinfo("Result", "Signs of heart disease detected")
         except Exception as e:
-            mb.showerror("Error", f"An error occurred during prediction: {e}")
+            mb.showerror("Error", f"An error occurred during calculations: {e}")
 
+    # Function to turn user input data into model comprehensive data
     def preprocess_data(self, data):
-        """
-        Preprocess the input data to match the model's expected format.
-
-        :param data: Dictionary of input data from the form.
-        :return: DataFrame with preprocessed data.
-        """
-        # Map categorical variables to numerical values
+        # Map user input to model value
         mapping = {
             "Sex:": {"Male": 1, "Female": 0},
             "Fasting Blood Sugar > 120 mg/dL:": {"Yes": 1, "No": 0},
@@ -174,7 +172,7 @@ class PatientFormTab:
             "Thalassemia:": {"Normal": 3, "Fixed Defect": 6, "Reversible Defect": 7},
         }
 
-        # Map form labels to model feature names
+        # Map of GUI labels to feature names
         label_to_feature = {
             "Age:": "age",
             "Sex:": "sex",
@@ -191,7 +189,7 @@ class PatientFormTab:
             "Thalassemia:": "thal"
         }
 
-        # List of feature names in the correct order
+        # Ordered list of feature names
         feature_order = [
             "age", "sex", "cp", "trestbps", "chol",
             "fbs", "restecg", "thalach", "exang",
@@ -219,28 +217,30 @@ class PatientFormTab:
             else:
                 raise ValueError(f"Missing value for {label}")
 
-        # Create a DataFrame with correct feature names
+        # Create a pd df with the collected data
         input_df = pd.DataFrame([processed_data], columns=feature_order)
         return input_df
 
+    # Function to store report securely in hdisrep.json
     def save_report(self):
-        """Save the data and prediction result into 'hdisrep.json' with encryption."""
+
+        # Check if prediction
         if self.prediction_result is None:
-            mb.showwarning("Warning", "Please submit the form to get a prediction before saving the report.")
+            mb.showwarning("Warning", "Please submit the form before saving.")
             return
 
-        # Collect data
+        # CGet data
         data = {label.strip(':'): widget.get() for label, widget in self.widgets.items()}
 
         # Add prediction result
         if self.prediction_result == 0:
-            result_text = "The patient does NOT have heart disease."
+            result_text = "NO signs of heart disease detected."
         else:
-            result_text = "The patient HAS heart disease."
+            result_text = "Signs of heart disease detected."
 
         data["Prediction Result"] = result_text
 
-        # Create the key using First Name, Last Name, and Date of Birth
+        # Create hashmap key with fn ln and dob
         first_name = data.get("First Name", "").strip()
         last_name = data.get("Last Name", "").strip()
         date_of_birth = data.get("Date of Birth", "").strip()
@@ -251,7 +251,7 @@ class PatientFormTab:
 
         key = f"{first_name}_{last_name}_{date_of_birth}"
 
-        # Load existing data if the file exists, decrypting it first
+        # Load and decrypt file
         reports = {}
         if os.path.exists("hdisrep.json"):
             try:
@@ -261,7 +261,6 @@ class PatientFormTab:
                         decrypted_data = self.cipher_suite.decrypt(encrypted_data)
                         reports = json.loads(decrypted_data.decode('utf-8'))
                     else:
-                        # File is empty
                         reports = {}
             except Exception as e:
                 # Handle decryption error
@@ -271,10 +270,10 @@ class PatientFormTab:
                     # Overwrite the file
                     reports = {}
                 else:
-                    # Do not overwrite, exit the method
+                    # Do not overwrite. Exit the method
                     return
         else:
-            # File does not exist; initialize empty reports dictionary
+            # File does not exist.
             reports = {}
 
         # Add or update the patient's data
@@ -286,6 +285,6 @@ class PatientFormTab:
             encrypted_data = self.cipher_suite.encrypt(json_data.encode('utf-8'))
             with open("hdisrep.json", "wb") as f:
                 f.write(encrypted_data)
-            mb.showinfo("Success", f"Report saved and encrypted successfully under key '{key}' in 'hdisrep.json'.")
+            mb.showinfo("Success", f"Report saved successfully")
         except Exception as e:
-            mb.showerror("Error", f"An error occurred while saving and encrypting the report: {e}")
+            mb.showerror("Error", f"An erroor occured")
