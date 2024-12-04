@@ -1,10 +1,13 @@
+# tabs/PatientFormTab.py
 import tkinter as tk
 from tkinter import ttk, messagebox as mb
 from tkcalendar import DateEntry
 import pandas as pd
 import json
 import os
+import sys
 from cryptography.fernet import Fernet
+from fpdf import FPDF
 
 """
 - Tab containing a form to collect patient information and make predictions.
@@ -12,26 +15,38 @@ from cryptography.fernet import Fernet
 - Uses the model to make predictions based on the input data.
 """
 class PatientFormTab:
-    # Form Constructor
+    # Constructor
     def __init__(self, parent, model):
         self.frame = ttk.Frame(parent)
         self.model = model 
         self.prediction_result = None
-        self.create_widgets()
         self.key = self.load_key()
         self.cipher_suite = Fernet(self.key)
+        self.create_widgets()
 
-    # Get key to decryot data
-    def load_key(self):
+    # Find file using relative path
+    def resource_path(self, relative_path):
         try:
-            with open('secret.key', 'rb') as key_file:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
+    # Get key
+    def load_key(self):
+        key_path = self.resource_path("secret.key")
+        try:
+            with open(key_path, 'rb') as key_file:
                 key = key_file.read()
             return key
         except FileNotFoundError:
             mb.showerror("Error", "Encryption key file 'secret.key' not found.")
             raise
+        except Exception as e:
+            mb.showerror("Error", f"An unexpected error occurred while loading the key: {e}")
+            raise
     
-    # Create widgets for the form
+    # Make widgets
     def create_widgets(self):
         patient_frame = ttk.LabelFrame(self.frame, text="Patient Information", padding=(20, 10))
         patient_frame.pack(fill="x", padx=20, pady=10)
@@ -62,7 +77,7 @@ class PatientFormTab:
         # Dictionary to store widget references
         self.widgets = {}
 
-        # Determine the width of longest label
+        # Determine width of longest label
         max_label_length = max(len(label) for label, _ in self.fields)
         field_width = max_label_length + 5  
 
@@ -75,7 +90,7 @@ class PatientFormTab:
                 parent_frame = medical_frame
                 row_index = i - 4
             
-            # Add label and widget to fram
+            # Add label and widget to frame
             ttk.Label(parent_frame, text=label).grid(row=row_index, column=0, sticky="w", pady=5)
             if isinstance(value, list): 
                 widget = ttk.Combobox(
@@ -126,7 +141,7 @@ class PatientFormTab:
             pady=5,
         ).pack(side="left", padx=10)
 
-    # Function to get prediction
+    # Send patient info to json
     def submit_info(self):
         # Check if all fields are filled
         for label, widget in self.widgets.items():
@@ -138,12 +153,13 @@ class PatientFormTab:
                 return
 
         # Process data
-        data = {label: widget.get() for label, widget in self.widgets.items()}
-        print("Collected Data:", data)  
+        data = {label.strip(':'): widget.get() for label, widget in self.widgets.items()}
+        print("Collected Data:", data)  # Debugging line
 
         # Preprocess data to match model data
         try:
             input_data = self.preprocess_data(data)
+            print("Preprocessed Data:", input_data)  # Debugging line
             prediction = self.model.predict(input_data)
             result = prediction[0]
 
@@ -154,39 +170,43 @@ class PatientFormTab:
             if result == 0:
                 mb.showinfo("Result", "NO signs of heart disease detected.")
             else:
-                mb.showinfo("Result", "Signs of heart disease detected")
+                mb.showinfo("Result", "Signs of heart disease detected.")
         except Exception as e:
             mb.showerror("Error", f"An error occurred during calculations: {e}")
 
-    # Function to turn user input data into model comprehensive data
+    # Preprocess data
     def preprocess_data(self, data):
         # Map user input to model value
         mapping = {
-            "Sex:": {"Male": 1, "Female": 0},
-            "Fasting Blood Sugar > 120 mg/dL:": {"Yes": 1, "No": 0},
-            "Exercise Induced Angina:": {"Yes": 1, "No": 0},
-            "Chest Pain Type (0-3):": {"0": 0, "1": 1, "2": 2, "3": 3},
-            "Resting ECG:": {"Normal": 0, "ST-T Wave Abnormality": 1, "Left Ventricular Hypertrophy": 2},
-            "Slope of Peak Exercise ST Segment:": {"Upsloping": 0, "Flat": 1, "Downsloping": 2},
-            "Number of Major Vessels:": {"0": 0, "1": 1, "2": 2, "3": 3},
-            "Thalassemia:": {"Normal": 3, "Fixed Defect": 6, "Reversible Defect": 7},
+            "Sex": {"Male": 1, "Female": 0},
+            "Age": lambda x: float(x),
+            "Serum Cholesterol (mg/dL)": lambda x: float(x),
+            "Max Heart Rate (BPM)": lambda x: float(x),
+            "ST Depression": lambda x: float(x),
+            "Fasting Blood Sugar > 120 mg/dL": {"Yes": 1, "No": 0},
+            "Exercise Induced Angina": {"Yes": 1, "No": 0},
+            "Chest Pain Type (0-3)": {"0": 0, "1": 1, "2": 2, "3": 3},
+            "Resting ECG": {"Normal": 0, "ST-T Wave Abnormality": 1, "Left Ventricular Hypertrophy": 2},
+            "Slope of Peak Exercise ST Segment": {"Upsloping": 0, "Flat": 1, "Downsloping": 2},
+            "Number of Major Vessels": {"0": 0, "1": 1, "2": 2, "3": 3},
+            "Thalassemia": {"Normal": 3, "Fixed Defect": 6, "Reversible Defect": 7},
         }
 
         # Map of GUI labels to feature names
         label_to_feature = {
-            "Age:": "age",
-            "Sex:": "sex",
-            "Chest Pain Type (0-3):": "cp",
-            "Resting Blood Pressure (mmHg):": "trestbps",
-            "Serum Cholesterol (mg/dL):": "chol",
-            "Fasting Blood Sugar > 120 mg/dL:": "fbs",
-            "Resting ECG:": "restecg",
-            "Max Heart Rate (BPM):": "thalach",
-            "Exercise Induced Angina:": "exang",
-            "ST Depression:": "oldpeak",
-            "Slope of Peak Exercise ST Segment:": "slope",
-            "Number of Major Vessels:": "ca",
-            "Thalassemia:": "thal"
+            "Age": "age",
+            "Sex": "sex",
+            "Chest Pain Type (0-3)": "cp",
+            "Resting Blood Pressure (mmHg)": "trestbps",
+            "Serum Cholesterol (mg/dL)": "chol",
+            "Fasting Blood Sugar > 120 mg/dL": "fbs",
+            "Resting ECG": "restecg",
+            "Max Heart Rate (BPM)": "thalach",
+            "Exercise Induced Angina": "exang",
+            "ST Depression": "oldpeak",
+            "Slope of Peak Exercise ST Segment": "slope",
+            "Number of Major Vessels": "ca",
+            "Thalassemia": "thal"
         }
 
         # Ordered list of feature names
@@ -204,32 +224,43 @@ class PatientFormTab:
             if label in data:
                 value = data[label]
                 if label in mapping:
-                    value = mapping[label].get(value)
+                    if isinstance(mapping[label], dict):
+                        # For dictionary mappings
+                        value = mapping[label].get(value)
+                    elif callable(mapping[label]):
+                        # For callable mappings (e.g., lambda functions)
+                        try:
+                            value = mapping[label](value)
+                        except Exception as e:
+                            raise ValueError(f"Error processing {label}: {e}")
+                    else:
+                        raise ValueError(f"Invalid mapping type for {label}")
+                    
                     if value is None:
                         raise ValueError(f"Invalid value for {label}")
                 else:
-                    # Convert to numeric
+                    # If no mapping is defined, attempt to convert to float
                     try:
                         value = float(value)
                     except ValueError:
                         raise ValueError(f"Invalid input for {label}: must be a number.")
+                
                 processed_data.append(value)
             else:
                 raise ValueError(f"Missing value for {label}")
 
-        # Create a pd df with the collected data
+        # Create a pandas DataFrame with the collected data
         input_df = pd.DataFrame([processed_data], columns=feature_order)
         return input_df
 
-    # Function to store report securely in hdisrep.json
+    # Save report
     def save_report(self):
-
-        # Check if prediction
+        # Check if prediction exists
         if self.prediction_result is None:
             mb.showwarning("Warning", "Please submit the form before saving.")
             return
 
-        # CGet data
+        # Get data
         data = {label.strip(':'): widget.get() for label, widget in self.widgets.items()}
 
         # Add prediction result
@@ -240,7 +271,7 @@ class PatientFormTab:
 
         data["Prediction Result"] = result_text
 
-        # Create hashmap key with fn ln and dob
+        # Create hashmap key with first name, last name, and DOB
         first_name = data.get("First Name", "").strip()
         last_name = data.get("Last Name", "").strip()
         date_of_birth = data.get("Date of Birth", "").strip()
@@ -253,9 +284,10 @@ class PatientFormTab:
 
         # Load and decrypt file
         reports = {}
-        if os.path.exists("hdisrep.json"):
+        report_path = self.resource_path("hdisrep.json")
+        if os.path.exists(report_path):
             try:
-                with open("hdisrep.json", "rb") as f:
+                with open(report_path, "rb") as f:
                     encrypted_data = f.read()
                     if encrypted_data:
                         decrypted_data = self.cipher_suite.decrypt(encrypted_data)
@@ -263,28 +295,24 @@ class PatientFormTab:
                     else:
                         reports = {}
             except Exception as e:
-                # Handle decryption error
-                response = mb.askyesno("Error", f"An error occurred while decrypting 'hdisrep.json': {e}\n\n"
-                                                "Do you want to overwrite the file with new data?")
+                # Handle error
+                response = mb.askyesno("Error", f"Error decrypting '{report_path}': {e}\n\nOverwrite with new data?")
                 if response:
-                    # Overwrite the file
                     reports = {}
                 else:
-                    # Do not overwrite. Exit the method
                     return
         else:
-            # File does not exist.
             reports = {}
 
-        # Add or update the patient's data
+        # Add or update patient's data
         reports[key] = data
 
-        # Save and encrypt the updated data
+        # Save and encrypt updated data
         try:
-            json_data = json.dumps(reports, indent=4)
-            encrypted_data = self.cipher_suite.encrypt(json_data.encode('utf-8'))
-            with open("hdisrep.json", "wb") as f:
+            updated_data = json.dumps(reports).encode('utf-8')
+            encrypted_data = self.cipher_suite.encrypt(updated_data)
+            with open(report_path, "wb") as f:
                 f.write(encrypted_data)
-            mb.showinfo("Success", f"Report saved successfully")
+            mb.showinfo("Success", "Patient report saved successfully.")
         except Exception as e:
-            mb.showerror("Error", f"An erroor occured")
+            mb.showerror("Error", f"An error occurred while saving the report: {e}")

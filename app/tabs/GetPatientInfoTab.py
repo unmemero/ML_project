@@ -1,20 +1,22 @@
+# tabs/GetPatientInfoTab.py
 import tkinter as tk
 from tkinter import ttk, messagebox as mb
 from tkcalendar import DateEntry
 import json
 import os
+import sys
 from cryptography.fernet import Fernet
 from fpdf import FPDF
 
 """
-- Tab to search patient records
-- Displays data decrypted from hdisrep.json
-- Allows printing a PDF report for patient data
+- Retrieves decrypted patient information from 'hdisrep.json' file.
+- Displays patient information in a text box.
+- Allows user to print the patient information as a PDF.
 """
 
 class GetPatientInfoTab:
 
-    # Tab Constructor
+    # Constructor
     def __init__(self, parent):
         self.frame = ttk.Frame(parent)
         self.key = self.load_key()
@@ -22,17 +24,31 @@ class GetPatientInfoTab:
         self.create_widgets()
         self.patient_data = None 
 
-    # Get key for data decryption
+    # Resolve resource path for PyInstaller
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+
+    # Load encryption key
     def load_key(self):
         try:
-            with open('secret.key', 'rb') as key_file:
+            key_path = self.resource_path('secret.key')
+            with open(key_path, 'rb') as key_file:
                 key = key_file.read()
             return key
         except FileNotFoundError:
-            mb.showerror("Error", "Unable to read patient data. Please contact the system administrator.")
+            mb.showerror("Error", "Encryption key 'secret.key' not found. Please ensure it exists in the application directory.")
+            raise
+        except Exception as e:
+            mb.showerror("Error", f"An unexpected error occurred while loading the key: {e}")
             raise
 
-    # Create widgets for the tab
+    # Widget maker for  the tab
     def create_widgets(self):
         # Patient search frame
         search_frame = ttk.LabelFrame(self.frame, text="Search Patient", padding=(20, 10))
@@ -43,7 +59,6 @@ class GetPatientInfoTab:
         self.first_name_entry = ttk.Entry(search_frame, width=30)
         self.first_name_entry.grid(row=0, column=1, pady=5)
 
-    
         ttk.Label(search_frame, text="Last Name:").grid(row=1, column=0, sticky="w", pady=5)
         self.last_name_entry = ttk.Entry(search_frame, width=30)
         self.last_name_entry.grid(row=1, column=1, pady=5)
@@ -91,38 +106,37 @@ class GetPatientInfoTab:
         )
         self.print_button.pack(pady=10)
 
-    # Get patient info from reports
+    # Get patient information
     def get_patient_info(self):
-        # Get patient info
         first_name = self.first_name_entry.get().strip()
         last_name = self.last_name_entry.get().strip()
         date_of_birth = self.dob_entry.get().strip()
 
-        # No enttry validation
+        # Entry validation
         if not first_name or not last_name or not date_of_birth:
             mb.showerror("Error", "Please enter the patient's first name, last name, and date of birth.")
             return
-        
-        # Create key for patient data entry in the json file
+
+        # Create key for patient data entry in json file
         key = f"{first_name}_{last_name}_{date_of_birth}"
 
-        # Load and decrypt the reports
-        if not os.path.exists("hdisrep.json"):
-            mb.showerror("Error", "No patient reports found.")
-            return
-
+        # Load and decrypt reports
         try:
-            # Decrypt the reports and find patient data
-            with open("hdisrep.json", "rb") as f:
+            hdisrep_path = self.resource_path("hdisrep.json")
+            if not os.path.exists(hdisrep_path):
+                mb.showerror("Error", "No patient reports found ('hdisrep.json' is missing).")
+                return
+
+            with open(hdisrep_path, "rb") as f:
                 encrypted_data = f.read()
                 if encrypted_data:
                     decrypted_data = self.cipher_suite.decrypt(encrypted_data)
                     reports = json.loads(decrypted_data.decode('utf-8'))
                 else:
-                    mb.showerror("Error", "No patient reports found.")
+                    mb.showerror("Error", "No patient reports found in 'hdisrep.json'.")
                     return
         except Exception as e:
-            mb.showerror("Error", f"An error occurred getting the data. Please contact your system administrator': {e}")
+            mb.showerror("Error", f"An error occurred while retrieving data: {e}")
             return
 
         # Retrieve patient data
@@ -137,19 +151,17 @@ class GetPatientInfoTab:
             self.report_text.config(state="disabled")
             self.print_button.config(state="disabled")
 
-    # Display patient info in the text widget
+    # Show patient information in text box
     def display_patient_info(self, data):
         self.report_text.config(state="normal")
         self.report_text.delete("1.0", tk.END)
-        report_lines = []
-        report_lines.append("Patient Report\n")
-        report_lines.append("-" * 50 + "\n")
+        report_lines = ["\nPatient Report\n", "-" * 50 + "\n"]
         for key, value in data.items():
             report_lines.append(f"{key}: {value}\n")
         self.report_text.insert(tk.END, "".join(report_lines))
         self.report_text.config(state="disabled")
 
-    # Print patient data as a PDF
+    # Print patient information as PDF
     def print_pdf(self):
         if self.patient_data is None:
             mb.showerror("Error", "No patient data to print.")
